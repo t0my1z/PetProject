@@ -3,10 +3,11 @@ REM Script to run chat_creator and chat_joiner in separate terminals
 
 setlocal enabledelayedexpansion
 
-REM Set the paths
-set EXE_PATH=C:\Users\trodrigoc\Documents\Personal\PetProject\install\windows\bin\comms_manager.exe
-set CONFIG_CREATOR=C:\Users\trodrigoc\Documents\Personal\PetProject\install\windows\config
-set CONFIG_JOINER=C:\Users\trodrigoc\Documents\Personal\PetProject\install\windows\config_joiner
+REM Resolve paths from the project root (two levels above this script)
+set "PROJECT_ROOT=%~dp0..\.."
+set "EXE_PATH=%PROJECT_ROOT%\install\windows\bin\comms_manager.exe"
+set "CONFIG_CREATOR=%PROJECT_ROOT%\install\windows\config"
+set "CONFIG_JOINER=%PROJECT_ROOT%\install\windows\config_joiner"
 
 REM Verify files exist
 if not exist "%EXE_PATH%" (

@@ -3,6 +3,7 @@
 #include "settings/Settings.hpp"
 #include "connections/ConnectionManager.hpp"
 #include "module/ModuleManager.hpp"
+#include "Log.hpp"
 
 #include <exception>
 #include <iostream>
@@ -33,11 +34,11 @@ void CommsManager::Initialize(int argc, char** argv)
 
         try {
             connection_manager->Initialize(config.connections);
-            std::cout << "Initialized " << config.connections.size() << " connections" << std::endl;
+            log_debug("Initialized {} connections", config.connections.size());
         } 
         catch (const std::exception& e) {
-                std::cerr << "Warning: Failed to initialize connections: " << e.what() << std::endl;
-                std::cerr << "Continuing with module loading..." << std::endl;
+                log_warn("Failed to initialize connections: {}", e.what());
+                log_info("Continuing with module loading...");
         } 
 
         fs::path modulesPath;
@@ -51,17 +52,17 @@ void CommsManager::Initialize(int argc, char** argv)
             modulesPath = configFolderPath.parent_path() / "lib" / "modules";
         }
         
-        std::cout << "Module path: " << modulesPath << std::endl;
+        log_info("Module path: {}", modulesPath.string());
         module_manager->LoadModules(modulesPath.string(), this, connection_manager.get());
         module_manager->InitializeModules();
 
-        std::cout << "\nAll modules initialized and ready" << std::endl;
+        log_info("\nAll modules initialized and ready");
     } 
     catch (const std::invalid_argument& error) {
-        std::cerr << "Error: " << error.what() << '\n'
-                  << "Usage: comms_manager --config_folder <path> [--module_folder <path>]\n";
+        log_error("Error: {}", error.what());
+        log_info("Usage: comms_manager --config_folder <path> [--module_folder <path>]");
     } catch (const std::exception& error) {
-        std::cerr << "Error: " << error.what() << '\n';
+        log_error("Error: {}", error.what());
     }
 
     running = true;
@@ -93,7 +94,7 @@ void CommsManager::Loop()
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         } 
         catch (const std::exception& e) {
-            std::cerr << "Error in event loop: " << e.what() << std::endl;
+            log_error("Error in event loop: {}", e.what());
         }
     }
 }

@@ -1,6 +1,4 @@
 # Chat Creator Configuration
-# This configuration is for the computer that creates the chat room
-# It uses UDP to communicate with the Chat Joiner
 
 connections:
   - name: "chat_connection"

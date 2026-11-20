@@ -1,6 +1,5 @@
 #include "Stream.hpp"
-
-#include <winsock2.h>
+#include "Log.hpp"
 
 Stream::Stream(unsigned int maxLostMessages)
     : Link(maxLostMessages), socket(context), acceptor(context)
@@ -53,6 +52,7 @@ bool Stream::Connect(const ConnectionConfig& config)
                 continue;
             }
             status.SetReady();
+            log_info("Stream connected to {}:{}", entry.endpoint().address().to_string(), entry.endpoint().port());
             return true;
         }
         asio::error_code closeError;
@@ -148,9 +148,7 @@ bool Stream::Read(std::span<std::uint8_t> buffer, std::size_t& bytesRead)
     
     // Connection reset or refused are okay - remote end just isn't ready
     if (error == asio::error::connection_reset || 
-        error == asio::error::connection_refused ||
-        error.value() == WSAECONNRESET ||
-        error.value() == WSAECONNREFUSED)
+        error == asio::error::connection_refused)
     {
         bytesRead = 0;
         return true;  // Don't treat connection errors as fatal in startup

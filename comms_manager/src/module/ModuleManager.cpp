@@ -5,6 +5,7 @@
 #include "communication/Protocol.hpp"
 #include "communication/ChatProtocol.hpp"
 #include "settings/Settings.hpp"
+#include "Log.hpp"
 
 #include <iostream>
 #include <filesystem>
@@ -31,7 +32,7 @@ void ModuleManager::LoadModules(const std::string& modulesPath, CommsManager* co
         return;
     }
 
-    std::cout << "Loading modules from: " << modulesPath << std::endl;
+    log_info("Loading modules from: {}", modulesPath);
 
     const auto& config = Settings::GetSettings().GetProgramConfig();
 
@@ -41,19 +42,19 @@ void ModuleManager::LoadModules(const std::string& modulesPath, CommsManager* co
         for (const auto& moduleConfig : config.modules)
         {
             std::string moduleName = moduleConfig.name;
-            std::cout << "Loading configured module: " << moduleName << std::endl;
+            log_info("Loading configured module: {}", moduleName);
 
             fs::path moduleDir = fs::path(modulesPath) / moduleName;
 
             if (!fs::exists(moduleDir))
             {
-                std::cerr << "Module directory not found: " << moduleDir << std::endl;
+                log_error("Module directory not found: {}", moduleDir.string());
                 continue;
             }
 
             if (!fs::is_directory(moduleDir))
             {
-                std::cerr << "Module path is not a directory: " << moduleDir << std::endl;
+                log_error("Module path is not a directory: {}", moduleDir.string());
                 continue;
             }
 
@@ -69,11 +70,11 @@ void ModuleManager::LoadModules(const std::string& modulesPath, CommsManager* co
 
             if (!fs::exists(libPath))
             {
-                std::cerr << "Module library not found: " << libPath << std::endl;
+                log_error("Module library not found: {}", libPath.string());
                 continue;
             }
 
-            std::cout << "Loading module library: " << libPath << std::endl;
+            log_info("Loading module library: {}", libPath.string());
 
             // Load the shared library
             void* handle = nullptr;
@@ -82,14 +83,14 @@ void ModuleManager::LoadModules(const std::string& modulesPath, CommsManager* co
             if (!handle)
             {
                 DWORD error = GetLastError();
-                std::cerr << "Failed to load module " << moduleName << ": error code " << error << std::endl;
+                log_error("Failed to load module {}: error code {}", moduleName, error);
                 continue;
             }
 #else
             handle = dlopen(libPath.string().c_str(), RTLD_LAZY);
             if (!handle)
             {
-                std::cerr << "Failed to load module " << moduleName << ": " << dlerror() << std::endl;
+                log_error("Failed to load module {}: {}", moduleName, dlerror());
                 continue;
             }
 #endif
@@ -101,8 +102,7 @@ void ModuleManager::LoadModules(const std::string& modulesPath, CommsManager* co
             if (!factory)
             {
                 DWORD error = GetLastError();
-                std::cerr << "Failed to get create_module function from " << moduleName 
-                          << " (error code: " << error << ")" << std::endl;
+                log_error("Failed to get create_module function from {}: error code {}", moduleName, error);
                 FreeLibrary((HMODULE)handle);
                 continue;
             }
@@ -110,7 +110,7 @@ void ModuleManager::LoadModules(const std::string& modulesPath, CommsManager* co
             factory = reinterpret_cast<ModuleFactory>(dlsym(handle, "create_module"));
             if (!factory)
             {
-                std::cerr << "Failed to get create_module function from " << moduleName << ": " << dlerror() << std::endl;
+                log_error("Failed to get create_module function from {}: {}", moduleName, dlerror());
                 dlclose(handle);
                 continue;
             }
@@ -131,7 +131,7 @@ void ModuleManager::LoadModules(const std::string& modulesPath, CommsManager* co
                         protocol = std::make_unique<ChatProtocol>(type);
                         break;
                     default:
-                        std::cerr << "Unsupported communication method" << std::endl;
+                        log_error("Unsupported communication method");
                         continue;
                 }
                 connectionDataMap[connection].protocol_of_connection = std::move(protocol);
@@ -141,7 +141,7 @@ void ModuleManager::LoadModules(const std::string& modulesPath, CommsManager* co
 
             if (!module)
             {
-                std::cerr << "Failed to create module instance: " << moduleName << std::endl;
+                log_error("Failed to create module instance: {}", moduleName);
 #ifdef _WIN32
                 FreeLibrary((HMODULE)handle);
 #else
@@ -150,7 +150,7 @@ void ModuleManager::LoadModules(const std::string& modulesPath, CommsManager* co
                 continue;
             }
 
-            std::cout << "Successfully loaded module: " << moduleName << std::endl;
+            log_info("Successfully loaded module: {}", moduleName);
 
             LoadedModule loadedModule;
             loadedModule.handle = handle;
@@ -161,23 +161,23 @@ void ModuleManager::LoadModules(const std::string& modulesPath, CommsManager* co
     }
     catch (const std::exception& e)
     {
-        std::cerr << "Error loading modules: " << e.what() << std::endl;
+        log_error("Error loading modules: {}", e.what());
     }
 }
 
 void ModuleManager::InitializeModules()
 {
-    std::cout << "Initializing " << loadedModules.size() << " modules" << std::endl;
+    log_info("Initializing {} modules", loadedModules.size());
     for (auto& loadedModule : loadedModules)
     {
         try
         {
-            std::cout << "Initializing module: " << loadedModule.module->GetName() << std::endl;
+            log_info("Initializing module: {}", loadedModule.module->GetName());
             loadedModule.module->Initialize();
         }
         catch (const std::exception& e)
         {
-            std::cerr << "Failed to initialize module: " << e.what() << std::endl;
+            log_error("Failed to initialize module {}: {}", loadedModule.module->GetName(), e.what());
         }
     }
 }
@@ -214,7 +214,7 @@ void ModuleManager::ProcessModules(ConnectionManager* connectionManager)
 
 void ModuleManager::UnloadModules()
 {
-    std::cout << "Unloading modules" << std::endl;
+    log_info("Unloading {} modules", loadedModules.size());
     for (auto& loadedModule : loadedModules)
     {
         if (loadedModule.handle)

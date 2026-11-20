@@ -66,9 +66,8 @@ target_link_libraries(${PROJECT_NAME}
             yaml-cpp::yaml-cpp
 )
 
-# Export all symbols from the executable so dynamically loaded modules can access them
-# Required for loading dynamic libraries on Windows runtime
-if(WIN32)
+# MinGW requires this GNU linker option to export executable symbols to loaded modules.
+if(MINGW)
     target_link_options(${PROJECT_NAME}
         PRIVATE
             -Wl,--export-all-symbols

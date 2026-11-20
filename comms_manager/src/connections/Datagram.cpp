@@ -1,17 +1,19 @@
 #include "Datagram.hpp"
+#include "Log.hpp"
 
 #include <algorithm>
 #include <array>
-#include <winsock2.h>
 
 Datagram::Datagram(unsigned int maxLostMessages)
     : Link(maxLostMessages), socket(context)
 {
+
 }
 
 bool Datagram::Connect(const ConnectionConfig& config)
 {
     ValidateEndpoint(config);
+
     if (!End())
         return false;
     if (config.remoteport == 0)
@@ -57,6 +59,7 @@ bool Datagram::Connect(const ConnectionConfig& config)
                 continue;
             }
             status.SetReady();
+            log_info("Datagram connected to {}:{}", entry.endpoint().address().to_string(), entry.endpoint().port());
             return true;
         }
         asio::error_code closeError;
@@ -98,9 +101,7 @@ bool Datagram::Read(std::span<std::uint8_t> buffer, std::size_t& bytesRead)
     // Connection reset or port unreachable are okay - remote end just isn't ready
     if (error == asio::error::connection_reset || 
         error == asio::error::connection_refused ||
-        error.value() == WSAECONNRESET ||
-        error.value() == WSAECONNREFUSED ||
-        error.value() == WSAEHOSTUNREACH)
+        error == asio::error::host_unreachable)
     {
         bytesRead = 0;
         return true;  // Don't treat connection errors as fatal in startup
