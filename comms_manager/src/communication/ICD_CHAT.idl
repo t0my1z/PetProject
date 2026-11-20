@@ -1,0 +1,37 @@
+// All integer fields are unsigned 32-bit values in network byte order (big-endian).
+// message_size includes the 8-byte header and the complete fixed-size payload.
+
+enum MessageType
+{
+    CREATED_CHAT_ROOM = 0,
+    JOIN_CHAT_ROOM    = 1,
+    LEAVE_CHAT_ROOM   = 2,
+    SEND_CHAT         = 3
+};
+
+struct MessageHeader
+{
+    uint32 message_size;
+    uint32 message_type;
+};
+
+struct CreatedChatRoom
+{
+    char[200] room_name;
+    char[100] admin_name;
+};
+
+struct JoinChatRoom
+{
+    char[100] joiner_name;
+};
+
+struct LeaveChatRoom
+{
+    char[100] leaver_name;
+};
+
+struct SendChat
+{
+    char[200] message;
+};

@@ -1,10 +1,12 @@
-#include <asio.hpp>
-#include <iostream>
 
-int main() {
-    asio::io_context io_context;
+#include "CommsManager.hpp"
 
-    std::cout << "Hello, Asio!" << std::endl;
+int main(int argc, char** argv) 
+{
+    CommsManager commsManager;
+    commsManager.Initialize(argc, argv);
+    commsManager.Loop();
+    commsManager.Shutdown();
 
     return 0;
 }

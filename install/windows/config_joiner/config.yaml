@@ -1,0 +1,21 @@
+# Chat Joiner Configuration
+# This configuration is for the computer that joins the chat room
+# It uses UDP to communicate with the Chat Creator
+
+connections:
+  - name: "chat_connection"
+    type: "UDP"
+    endianness: "Little"
+    host: "127.0.0.1"
+    localport: 9991
+    remoteport: 9990
+    timeout: false
+    frequency: 1
+    inbuffersize: 1024
+    outbuffersize: 1024
+
+modules:
+  - name: "chat_joiner"
+    communication_method: "CHAT"
+    connections:
+      - "chat_connection"

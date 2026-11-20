@@ -1,6 +1,5 @@
 # Build directories
 build/
-install/
 
 # VSCode
 .vscode/
@@ -16,13 +15,7 @@ build.ninja
 .ninja_deps
 .ninja_log
 
-# Binary outputs
-*.exe
-*.dll
-*.so
-*.dylib
-*.a
-*.lib
+
 
 # Debug files
 *.pdb

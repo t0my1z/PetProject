@@ -41,7 +41,7 @@ add_executable(${PROJECT_NAME})
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
     src/*.cpp
-    src*.c
+    src/*.c
 )
 
 file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS
@@ -58,21 +58,63 @@ target_sources(${PROJECT_NAME}
         FILES ${HEADERS}
 )
 
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+
 target_link_libraries(${PROJECT_NAME}
         PRIVATE
             Asio::Asio
             yaml-cpp::yaml-cpp
 )
 
+# Export all symbols from the executable so dynamically loaded modules can access them
+# Required for loading dynamic libraries on Windows runtime
+if(WIN32)
+    target_link_options(${PROJECT_NAME}
+        PRIVATE
+            -Wl,--export-all-symbols
+    )
+endif()
+
+# Add support for dynamic library loading
+# On Linux/Unix (but not MinGW/MSYS2 on Windows), link against libdl for dynamic library loading
+if(UNIX AND NOT APPLE AND NOT WIN32 AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    target_link_libraries(${PROJECT_NAME}
+        PRIVATE
+            dl
+    )
+endif()
+
+if(APPLE)
+    target_link_libraries(${PROJECT_NAME}
+        PRIVATE
+            ${CMAKE_DL_LIBS}
+    )
+endif()
+
+# Fix for MinGW with GNU compiler linking stdc++exp so std::println works correctly
+if(MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_link_libraries(${PROJECT_NAME}
+        PRIVATE
+            stdc++exp
+    )
+endif()
+
 source_group(
     TREE ${CMAKE_CURRENT_SOURCE_DIR}
     FILES ${SOURCES} ${HEADERS}
 )
 
+
+
 install(
     TARGETS ${PROJECT_NAME}
-    RUNTIME DESTINATION bin
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-    FILE_SET HEADERS DESTINATION include
+    RUNTIME DESTINATION ${INSTALL_DIR}/bin
+    ARCHIVE DESTINATION ${INSTALL_DIR}/lib
+    LIBRARY DESTINATION ${INSTALL_DIR}/lib
+    FILE_SET HEADERS DESTINATION ${INSTALL_DIR}/include
+)
+
+install(
+    DIRECTORY config config_joiner
+    DESTINATION ${INSTALL_DIR}
 )
