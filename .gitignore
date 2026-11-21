@@ -1,8 +1,10 @@
 # Build directories
 build/
+install/
 
 # VSCode
 .vscode/
+.devcontainer/
 
 # CMake generated files
 CMakeFiles/

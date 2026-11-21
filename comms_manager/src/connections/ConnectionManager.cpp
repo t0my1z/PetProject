@@ -1,10 +1,10 @@
 #include "connections/ConnectionManager.hpp"
 #include "connections/Connection.hpp"
+#include "Log.hpp"
 
 #include <iostream>
 #include <stdexcept>
 #include <utility>
-#include <print>
 
 namespace
 {
@@ -23,7 +23,7 @@ ConnectionManager::~ConnectionManager()
     for (const auto& [name, connection] : connections)
     {
         if (!connection->End())
-            std::cerr << ConnectionError("close", name, *connection) << '\n';
+            log_error("Failed to close connection '{}': {}", name, ConnectionError("close", name, *connection));
     }
 }
 
@@ -39,7 +39,7 @@ void ConnectionManager::SetOutputBufferFromConnection(const std::string& name, c
 {
     const auto found = connections.find(name);
     if (found == connections.end())
-        std::cerr << "Didnt find connection: " << name << '\n';
+        log_error("Didnt find connection: {}", name);
     found->second->SetOutputBuffer(data);
 }
 

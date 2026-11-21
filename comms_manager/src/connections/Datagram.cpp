@@ -43,11 +43,6 @@ bool Datagram::Connect(const ConnectionConfig& config)
         socket.bind(asio::ip::udp::endpoint(entry.endpoint().protocol(), config.localport), error);
         if (error)
             failure = LinkState::ERROR_BIND;
-        else
-        {
-            socket.connect(entry.endpoint(), error);
-            failure = LinkState::ERROR_CONNECT;
-        }
         if (!error)
         {
             // Set socket to non-blocking mode
@@ -58,8 +53,9 @@ bool Datagram::Connect(const ConnectionConfig& config)
                 socket.close(closeError);
                 continue;
             }
+            remote_endpoint = entry.endpoint();
             status.SetReady();
-            log_info("Datagram connected to {}:{}", entry.endpoint().address().to_string(), entry.endpoint().port());
+            log_info("Datagram ready to send to {}:{}", entry.endpoint().address().to_string(), entry.endpoint().port());
             return true;
         }
         asio::error_code closeError;
@@ -87,7 +83,8 @@ bool Datagram::Read(std::span<std::uint8_t> buffer, std::size_t& bytesRead)
     asio::error_code error;
     const auto start = LinkStatus::Clock::now();
     std::array<std::uint8_t, 65536> datagram;
-    const auto received = socket.receive(asio::buffer(datagram), 0, error);
+    asio::ip::udp::endpoint sender_endpoint;
+    const auto received = socket.receive_from(asio::buffer(datagram), sender_endpoint, 0, error);
     bytesRead = std::min(received, buffer.size());
     std::copy_n(datagram.begin(), bytesRead, buffer.begin());
     
@@ -119,7 +116,7 @@ bool Datagram::Write(std::span<const std::uint8_t> buffer, std::size_t& bytesWri
 {
     asio::error_code error;
     const auto start = LinkStatus::Clock::now();
-    bytesWritten = socket.send(asio::buffer(buffer.data(), buffer.size()), 0, error);
+    bytesWritten = socket.send_to(asio::buffer(buffer.data(), buffer.size()), remote_endpoint, 0, error);
     status.RecordWrite(bytesWritten, start, !error);
     if (error)
         status.SetError(LinkState::ERROR_SEND, error);

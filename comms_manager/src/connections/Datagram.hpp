@@ -16,4 +16,5 @@ public:
 
 private:
     asio::ip::udp::socket socket;
+    asio::ip::udp::endpoint remote_endpoint;
 };

@@ -21,14 +21,14 @@ namespace fs = std::filesystem;
 
 ModuleManager::~ModuleManager()
 {
-    UnloadModules();
+    
 }
 
 void ModuleManager::LoadModules(const std::string& modulesPath, CommsManager* commsManager, ConnectionManager* connectionManager)
 {
     if (!fs::exists(modulesPath))
     {
-        std::cerr << "Modules path does not exist: " << modulesPath << std::endl;
+        log_error("Modules path does not exist: {}", modulesPath);
         return;
     }
 
@@ -198,7 +198,7 @@ void ModuleManager::ProcessModules(ConnectionManager* connectionManager)
         }
         catch (const std::exception& e)
         {
-            std::cerr << "Error processing module " << loadedModule.module->GetName() << ": " << e.what() << std::endl;
+            log_error("Error processing module {}: {}", loadedModule.module->GetName(), e.what());
         }
 
         for(auto& [connectionName, connectionData] : loadedModule.module->GetConnectionDataMap())
@@ -217,6 +217,7 @@ void ModuleManager::UnloadModules()
     log_info("Unloading {} modules", loadedModules.size());
     for (auto& loadedModule : loadedModules)
     {
+        loadedModule.module.reset(); //Destroy module instance first
         if (loadedModule.handle)
         {
 #ifdef _WIN32

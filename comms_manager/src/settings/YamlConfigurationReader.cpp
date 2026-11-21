@@ -1,8 +1,8 @@
 #include "YamlConfigurationReader.hpp"
 #include "Settings.hpp"
+#include "Log.hpp"
 
 #include <filesystem>
-#include <print>
 #include <iostream>
 
 #include <yaml-cpp/yaml.h>
@@ -13,7 +13,7 @@ void YamlConfigurationReader::ReadProgramConfiguration(const std::string& config
     std::filesystem::path config_path = std::filesystem::path(configuration_folder) / "config.yaml";
     if (!std::filesystem::exists(config_path))
     {
-        std::println("Configuration file not found: {}", config_path.string());
+        log_error("Configuration file not found: {}", config_path.string());
     }
 
     configuration.config_file_path = config_path.string();
@@ -35,7 +35,7 @@ void YamlConfigurationReader::ReadProgramConfiguration(const std::string& config
             connection.inbuffersize = connection_node["inbuffersize"].as<int>();
             connection.outbuffersize = connection_node["outbuffersize"].as<int>();
 
-            std::println("Read connection with name '{}' from config file: {}", connection.name, configuration.config_file_path);
+            log_info("Read connection with name '{}' from config file: {}", connection.name, configuration.config_file_path);
 
             configuration.connections.push_back(connection);
         }
@@ -56,7 +56,7 @@ void YamlConfigurationReader::ReadProgramConfiguration(const std::string& config
                 }
             }
 
-            std::println("Read module with name '{}' from config file: {}", module.name, configuration.config_file_path);
+            log_info("Read module with name '{}' from config file: {}", module.name, configuration.config_file_path);
 
             configuration.modules.push_back(module);
         }
