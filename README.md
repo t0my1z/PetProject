@@ -21,7 +21,7 @@ The sample creator and joiner configurations use UDP over `127.0.0.1`, with port
   - yaml-cpp is built as a static library by default and linked into the executable.
 - On Windows, CMake also links the required Winsock system libraries.
 
-CMake uses the generator selected by the local environment. 
+CMake uses the generator selected by the local environment.
 
 ## Compile and install
 
@@ -47,21 +47,64 @@ cmake --build build --parallel
 cmake --install build --prefix ./install
 ```
 
+### Docker on Linux
+
+Docker provides an Ubuntu-based Linux build environment containing the compiler and build tools required by PetProject. Docker is especially useful when the host system does not already have a C++23 toolchain.
+
+Docker Engine must be installed and running. From the repository root, build the development image:
+
+```bash
+docker build -t petproject-dev .
+```
+
+Then start an interactive container and mount the repository into it:
+
+```bash
+docker run --rm -it --name petproject \
+  -v "$(pwd):/workspaces/PetProject" \
+  -w /workspaces/PetProject \
+  petproject-dev bash
+```
+
+Inside the container, use the Linux build script:
+
+```bash
+bash scripts/linux/build.sh
+```
+
+The build and installed files are written to `build/` and `install/` in the repository, because the container has mounted the repository directory.
+
+To run the sample with one container, open another Linux terminal and start the Chat Creator in the container:
+
+```bash
+docker exec -it petproject bash -lc \
+  './install/linux/bin/comms_manager --config_folder ./install/linux/config'
+```
+
+Open a third terminal and start the Chat Joiner:
+
+```bash
+docker exec -it petproject bash -lc \
+  './install/linux/bin/comms_manager --config_folder ./install/linux/config_joiner'
+```
+
+Both processes run in the same container network namespace, so their loopback UDP connections on ports `9990` and `9991` can communicate. Stop the processes with `Ctrl+C`. Exit the original container with `exit`; `--rm` removes the container automatically.
+
 ### Build scripts
 
-The scripts perform a clean build by deleting the repository's `build` and `install` directories first. Back up anything in those directories that you need to keep.
+The build scripts perform a clean build by deleting the repository's `build` and `install` directories first. Back up anything in those directories that you need to keep.
 
 - Windows: run `scripts\windows\build.bat`.
 - Linux: run `bash scripts/linux/build.sh`.
 
-The Linux build and run scripts are provided, but Linux has not yet been verified in the project environment.
+The Linux build and run scripts are provided.
 
 ## Run the sample
 
 The run scripts start the Chat Creator first and then the Chat Joiner, each in a separate terminal window. Build and install the project before running them.
 
 - Windows: run `scripts\windows\run_chat.bat`.
-- Linux: run `bash scripts/linux/run_chat.sh`. A supported graphical terminal emulator (`x-terminal-emulator`, GNOME Terminal, Konsole, Xfce Terminal, or xterm) is required.
+- Linux: run `bash scripts/linux/run_chat.sh`.
 
 To start an instance manually, pass a configuration directory containing `config.yaml`:
 

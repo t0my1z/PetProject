@@ -38,5 +38,4 @@ sleep 2
 echo "Starting Chat Joiner (Client)..."
 launch_terminal "$EXE_PATH" --config_folder "$CONFIG_JOINER"
 
-echo
-echo "Both instances started in separate terminal windows!"
+echo "Both instances are running in separate terminal windows."

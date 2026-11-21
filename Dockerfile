@@ -11,5 +11,7 @@ RUN apt-get update && apt-get install -y \
     valgrind \
     git \
     git-lfs \
+    dbus-x11 \
+    gnome-terminal \
     pkg-config \
     && rm -rf /var/lib/apt/lists/*
